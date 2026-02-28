@@ -1,552 +1,777 @@
-# AdPulse Africa (AAIS) — Autonomous Ad Intelligence System
-**Run ads like a pro. No agency needed.**  
-**Print attention on demand → convert it into deposits, bookings, and repeat customers.**
+# AAIS — Autonomous Ad Intelligence System (Africa)
+**AAIS** is a revenue recovery + automation OS for African businesses to **run ads like a pro without hiring an agency** by combining:
 
-AdPulse Africa is a production-grade, OSS-first platform for African businesses (real estate, clinics, coaches, e-commerce, events, hospitality) that:
-- **launches and tests ads automatically (A/B/C)**
-- **tracks conversions server-side (truth layer)**
-- **moves leads through WhatsApp + booking + deposit enforcement**
-- **rebalances budgets with guardrails**
-- **drives reviews + Google Business Profile optimization**
-- **centralizes data into one dashboard**
-
-> Core loop: **Attention Engine → Lead Engine → Booking/Payment Engine → Retention Engine**  
-All measured end-to-end with profit-first metrics.
+**Attention Engine → Lead Engine → Booking/Payment Engine → Retention Engine**  
+All measured end-to-end using **server-side truth** (not only platform pixels).
 
 ---
 
-## Table of Contents
-- [Key Capabilities](#key-capabilities)
-- [Architecture](#architecture)
-- [Monorepo Layout](#monorepo-layout)
-- [Tech Stack](#tech-stack)
-- [Core Concepts](#core-concepts)
-- [Decision Engine Guardrails](#decision-engine-guardrails)
-- [Metrics, SLAs, and Cost Ceilings](#metrics-slas-and-cost-ceilings)
-- [Quick Start (Local Dev)](#quick-start-local-dev)
-- [Production Deployment](#production-deployment)
-- [Environment Variables](#environment-variables)
-- [Webhook Integrations](#webhook-integrations)
-- [Database and Migrations](#database-and-migrations)
-- [Security Model](#security-model)
-- [Observability](#observability)
-- [Testing](#testing)
-- [Roadmap](#roadmap)
+## What AAIS Solves (African reality)
+Most businesses in Kenya/Africa:
+- don’t track properly (no unified truth)
+- don’t automate testing (no A/B/C discipline)
+- don’t use predictive scaling (no pacing / guardrails)
+- don’t centralize data (WhatsApp + payments + bookings live in different places)
+- lose revenue on follow-ups, booking chaos, and deposit enforcement
+
+AAIS fixes this by centralizing:
+- ads + experiments
+- leads + CRM
+- WhatsApp booking bot + reminders
+- M-Pesa deposits + verification
+- review + repeat customer automation
+- dashboards + decision engine
 
 ---
 
-## Key Capabilities
+## Core Capabilities
+### 1) AI Ad Orchestrator (No vague claims)
+Given an offer, AAIS:
+1. Computes **profit intelligence** (margin, Max CPA, capacity constraints)
+2. Creates **3 test variations** (A/B/C) with enforceable templates
+3. Deploys to **Meta / Google / TikTok** (connectors)
+4. Monitors performance and **reallocates budget** on schedule
+5. Enforces **guardrails** (caps, auto-pause, approvals, rollback)
 
-### 1) AI Ad Orchestrator (Offer → Profit → Creatives → Test → Deploy → Optimize)
-- Offer intake (product/service/event/property/clinic appointment/coaching)
-- Contribution margin + **Max CPA** computation (profit intelligence)
-- Generates **3 ad variations**:
-  - A: direct offer
-  - B: problem → solution
-  - C: proof/authority
-- Deploys to **Meta / Google / TikTok** (configurable)
-- Monitors & optimizes:
-  - pacing checks every **30–60 min**
-  - budget rebalances every **6–12 hours**
-  - creative fatigue scan **daily**
-- Guardrails prevent runaway spend
+### 2) “Run Ads Like a Pro (No Agency)” Mode
+A guided wizard:
+Offer → Margin → Tracking check → Landing QA → A/B/C launch → Daily report → Scale checklist
 
-### 2) WhatsApp + Booking Bot (Zero booking chaos)
-- Inquiry capture + instant qualification
-- Availability calendar integration
-- Deposit link + auto verification
-- Auto confirmations + reminders
-- No-show follow-ups
-- Broadcast campaigns + segmented winbacks
+### 3) WhatsApp Booking Bot + Funnel
+- Inquiry capture link/QR/widget → WhatsApp thread state machine
+- Availability check (calendar/resources)
+- Deposit request via **M-Pesa STK**
+- Auto-verification → confirmation → reminders → no-show flow
+- Review request + winback sequences
 
-### 3) CRM + Lead Tracking (African follow-up reality)
-- Standard pipeline stages
-- Lead scoring (rules-first; model later)
-- Assignment + follow-up automation
-- Conversion visibility: lead → booking → paid deposit → served → review → repeat
+### 4) CRM + Lead Tracking
+- Pipeline stages (standardized)
+- Lead scoring (rules-first)
+- Follow-up automation + broadcasts
 
-### 4) M-Pesa + Payments (Deposit enforcement)
-- STK push + Paybill reconciliation (provider-dependent)
-- Paystack/Stripe optional for cards/international
-- **Deposit required to confirm** with auto-expiry on unpaid holds
-- Full audit log of all payment decisions
-
-### 5) Reviews + Google Optimization
-- Automated review requests post-service
-- Negative review routing (private recovery flow)
-- GBP cadence: photos/posts/Q&A updates with queue and tracking
-
-### 6) Analytics Dashboard (Single source of truth)
-- Executive metrics: **incremental profit**, MER, CAC/CPA, pipeline value
-- Ads metrics: CTR/CPC/CPM/CPA, fatigue, learning status
-- Ops metrics: booking conversion, no-show rate, deposit compliance, response speed
-- Retention metrics: repeat rate, review velocity
+### 5) Analytics Dashboard
+- Executive: Profit, MER, CAC/CPA, pipeline value
+- Ads: CTR/CPC/CPA, fatigue, experiments status
+- Ops: response time, booking conversion, deposit compliance
+- Retention: repeat rate, review velocity
 
 ---
 
-## Architecture
-
-**Traffic → Data Collection → Intelligence → Decision Engine → Execution**
-
+## Architecture (Traffic → Data → Intelligence → Decision → Execution)
 ### Execution Surfaces
-- Meta Ads (FB/IG)
-- Google Ads (Search/PMAX/YouTube)
-- TikTok Ads
-- WhatsApp, Email/SMS, Google Business Profile, SEO
+- Meta Ads (FB/IG), Google Ads, TikTok Ads
+- WhatsApp, Web landing pages, Email/SMS (optional)
+- Google Business Profile (SEO + reviews)
 
-### Data Truth Layer (non-negotiable)
-- **Server-side events** written into Postgres first (truth)
-- Optional forwarding to:
-  - Meta Conversions API (CAPI)
-  - Google Enhanced Conversions
-- Web pixels are redundant (secondary) only
+### Data Collection Layer (Single Source of Truth)
+**Preferred:** server-side event ingestion + platform server APIs
+- Meta CAPI, Google Enhanced Conversions
+**Also:** pixel events for redundancy
+**Webhooks:** M-Pesa Daraja, WhatsApp provider, calendar, Paystack/Stripe (optional)
+
+### Intelligence Layer (specific jobs)
+- Margin & Max CPA calculation
+- Experiment evaluation (Bayesian/sequential)
+- Fatigue + anomaly detection
+- Short-horizon forecasting (24–72h) when enough data
 
 ### Decision Engine
-- Rules + Bayesian sequential tests (low-volume friendly)
-- Spend caps, auto-pause, scale rules, anomaly detection
-- All automated changes are recorded in **decision_logs** + **audit_logs**
-- Rollback supported
+- pacing, budget split, keep/kill/scale
+- anomaly triggers
+- attribution reconciliation (server truth vs platform)
+
+### Execution Engine
+- campaign CRUD + adjustments
+- WhatsApp flows
+- deposit enforcement + calendar confirmation
+- review requests + winbacks
+- audit logs + rollback
 
 ---
 
 ## Monorepo Layout
 
+apps/web - Next.js admin + wizards
+apps/api - Core API (NestJS/Fastify) + webhooks
+apps/worker - BullMQ workers (pacing, reminders, reporting)
+apps/mobile - Expo RN client (ops + quick actions)
+apps/landing - Optional marketing site
 
-adpulse-aaas/
-apps/
-web/ # Next.js dashboard + orchestrator UI
-api/ # Fastify API gateway + webhooks
-worker/ # BullMQ workers executing decision engine + automations
-mobile/ # Expo (React Native) owner/sales companion app
-packages/
-shared/ # Zod schemas, enums, types (single source of truth)
-connectors/ # Meta/Google/TikTok, WhatsApp, M-Pesa, Paystack, Stripe, GBP
-decision-engine # pacing, tests, anomalies, scaling logic (pure functions)
-ui/ # shared UI components
-infra/
-docker/ # compose.yaml + Caddyfile + scripts
-observability/ # Prometheus/Grafana configs (optional)
-database/
-migrations/ # SQL migrations + materialized views
-seeds/
-docs/
-runbooks/ # provider notes & operational docs
+packages/shared - shared types + zod + constants
+packages/decision-engine - deterministic decision + stats
+packages/connectors - Meta/Google/TikTok/WhatsApp/M-Pesa wrappers
+packages/ui - shared UI kit
+packages/config - lint/build configs
+
+infra/ - docker compose, Caddy, scripts
+docs/ - architecture + runbooks + SLAs
 
 
 ---
 
-## Tech Stack
-
-**Frontend**
+## Tech Stack (Production)
+### Frontend
 - Next.js 14 + TypeScript
 - Tailwind + shadcn/ui
+- Playwright (e2e), Vitest/Jest (unit)
 
-**Backend**
-- Node 20 + Fastify (API + webhooks)
-- Redis + BullMQ (jobs/queues)
-- Postgres (truth + CRM + booking + analytics)
+### Backend
+- Node.js + NestJS (recommended) or Fastify
+- BullMQ + Redis for queues and schedules
+- OpenAPI (Swagger)
+- RBAC + audit logs
 
-**Optional OSS Add-ons**
-- PostHog (product analytics)
-- Metabase (BI)
-- n8n (ops automation; non-money paths)
+### Database
+- **MongoDB Atlas** (primary)
+  - TTL indexes (tentative bookings, OTPs, stale reservations)
+  - Time-series collections (hourly metrics)
+  - Atlas Search (lead & conversation search)
+  - Change Streams (reactive workflows)
 
-**Hosting**
-- Docker Compose on a small VPS
-- Caddy reverse proxy + automatic TLS
+### Messaging
+- WhatsApp Business API via BSP (Meta Cloud API / Twilio / Infobip / Africa’s Talking)
+- Provider = transport; bot logic = AAIS
 
----
+### Storage
+- Cloudflare R2 (or S3-compatible)
 
-## Core Concepts
-
-### Offer → Profit Intelligence
-Each offer stores:
-- price
-- COGS / fulfillment costs
-- payment fees
-- refund allowance
-- capacity constraints
-
-Computed:
-- **Contribution Margin** = price − COGS − delivery/ops − fees − refund allowance
-- **Max CPA** = Contribution Margin × safety factor (default 0.60)
-
-### A/B/C Experiment
-Every launch includes:
-- 3 variations with distinct angles
-- minimum data thresholds before scale/kill actions
-- bias for **fast learning** in low volume (Bayesian)
-
-### Event Taxonomy (truth layer)
-Minimum event types:
-- `page_view`
-- `lead_created`
-- `whatsapp_started`
-- `quote_sent`
-- `booking_requested`
-- `deposit_requested`
-- `deposit_paid`
-- `booking_confirmed`
-- `service_delivered`
-- `review_requested`
-- `review_submitted`
-- `repeat_purchase`
+### Observability
+- Structured logs
+- Metrics optional: Prometheus/Grafana
+- Tracing optional: OpenTelemetry
 
 ---
 
-## Decision Engine Guardrails
+## SLOs, Latency Targets, Cost Ceilings
+### Latency (p95)
+- Webhook ingestion: < 500ms
+- Event write: < 150ms
+- WhatsApp bot response:
+  - deterministic: < 800ms
+  - LLM-backed: < 2.5s
+- Dashboard common queries: < 2s (pre-aggregations)
 
-Hard safety rules (defaults; configurable per org):
-- Daily spend cap per campaign + per account
-- Auto-pause if:
-  - `CPA > 1.3 × MaxCPA` after `minClicks` or `minConversions`
-- Budget increase approval required if:
-  - increase > `X%` within 24 hours
+### Decision cadence
+- anomaly checks: every 30 min
+- rebalance: every 6–12 hours
+- daily report generation: < 3 minutes
 
-Scaling rules:
-- Only scale when:
-  - `CPA <= MaxCPA` and `conversions >= threshold`
-- Scale step:
-  - +15% to +25% per 24h (configurable)
-- Creative fatigue:
-  - alert if CTR drops >20% AND CPA rises >15% (default)
-
-All automated actions log:
-- input metrics snapshot
-- decision reason
-- applied change
-- rollback pointer
+### Cost ceilings
+- infra baseline: $20–$60/mo SMB production
+- LLM usage: cap by **$ per lead-equivalent**
+- Creative generation: templates by default; paid gen only for winners
 
 ---
 
-## Metrics, SLAs, and Cost Ceilings
+## Environment Variables
+Create `.env.local` from `.env.local.example`.
 
-### Latency Targets (p95)
-- Webhook ingestion (M-Pesa/WA/Paystack): **< 500ms**
-- Event write to DB: **< 150ms**
-- Dashboard read queries: **< 2s** (materialized views + caching)
+### Core
+- `NODE_ENV=production|development`
+- `APP_URL=https://...`
+- `API_URL=https://...`
+- `JWT_SECRET=...`
+- `JWT_REFRESH_SECRET=...`
+- `ENCRYPTION_KEY=...` (32 bytes for AES-256-GCM)
 
-### Business KPIs
-- Incremental Profit (profit after spend, fees, refunds, ops)
-- CAC/CPA vs Max CPA
-- MER (revenue / marketing spend)
-- Lead-to-booking rate; booking-to-paid rate
-- Time-to-first-response (WhatsApp + forms)
-- Deposit compliance rate
-- Repeat rate (30/60/90)
-- Review rate + average rating
+### MongoDB Atlas
+- `MONGODB_URI=mongodb+srv://...`
+- `MONGODB_DB=aais`
+- `MONGODB_APP_NAME=aais-api`
 
-### Model/Decision Quality
-- Forecast error (MAPE): ≤25% early, ≤15% mature
-- Budget decision win-rate: ≥60% improve CPA within 48h
-- Fatigue detection precision: ≥70%
-- Lead score calibration: high-score converts ≥2× low-score
+### Redis / BullMQ
+- `REDIS_URL=redis://...`
+- `QUEUE_PREFIX=aais`
 
-### Cost Ceilings
-- Infra: target $20–$60/mo for SMB baseline (depends on volume)
-- LLM usage: cap $0.03–$0.10 per lead equivalent
-- Creative generation: template-first; paid generation only for winners
+### Storage (R2/S3)
+- `S3_ENDPOINT=...`
+- `S3_BUCKET=...`
+- `S3_ACCESS_KEY=...`
+- `S3_SECRET_KEY=...`
+
+### WhatsApp Provider
+- `WHATSAPP_PROVIDER=meta|twilio|infobip|africastalking`
+- Provider-specific keys…
+- `WHATSAPP_WEBHOOK_SECRET=...`
+
+### M-Pesa Daraja
+- `MPESA_CONSUMER_KEY=...`
+- `MPESA_CONSUMER_SECRET=...`
+- `MPESA_SHORTCODE=...`
+- `MPESA_PASSKEY=...`
+- `MPESA_ENV=sandbox|production`
+- `MPESA_WEBHOOK_SECRET=...`
+
+### Ad Platforms (connectors)
+- `META_APP_ID=...`
+- `META_APP_SECRET=...`
+- `META_ACCESS_TOKEN=...`
+- `GOOGLE_ADS_CLIENT_ID=...`
+- `GOOGLE_ADS_CLIENT_SECRET=...`
+- `GOOGLE_ADS_DEVELOPER_TOKEN=...`
+- `TIKTOK_APP_ID=...`
+- `TIKTOK_APP_SECRET=...`
 
 ---
 
-## Quick Start (Local Dev)
-
-### Prereqs
-- Node.js 20+
-- pnpm 9+
-- Docker + Docker Compose
-
-### 1) Clone + install
+## Local Development (Docker-first)
+### 1) Install
 ```bash
-git clone <your-repo-url> adpulse-aaas
-cd adpulse-aaas
 pnpm install
-2) Configure env
-
-Copy env templates:
-
-cp .env.example .env
-cp apps/api/env.example apps/api/.env
-cp apps/worker/env.example apps/worker/.env
-cp apps/web/env.example apps/web/.env.local
-cp apps/mobile/env.example apps/mobile/.env
-3) Start infra (Postgres + Redis + optional tools)
+2) Start infra (local Redis + optional local Mongo for dev)
 cd infra/docker
 docker compose up -d
-4) Run migrations
 
-Choose one approach:
+For production, use MongoDB Atlas. For local dev, you can run Mongo locally or point to Atlas.
 
-A) SQL migrations
-
-pnpm db:migrate
-pnpm db:seed
-
-B) Supabase CLI (if used)
-
-pnpm supabase:start
-pnpm supabase:migrate
-pnpm supabase:seed
-5) Start apps
-
-From repo root:
-
+3) Run API / Worker / Web
 pnpm dev
+# or individually:
+pnpm --filter @aais/api dev
+pnpm --filter @aais/worker dev
+pnpm --filter @aais/web dev
+pnpm --filter @aais/mobile dev
+4) Create Mongo indexes (required)
+pnpm --filter @aais/api run create-indexes
+Deployment (Single VPS, production-grade)
 
-Expected:
+Recommended: a small VPS running Docker + Caddy (TLS).
 
-Web: http://localhost:3000
+apps/api behind Caddy
 
-API: http://localhost:4000
+apps/worker as separate service
 
-Worker: background process consuming queues
+apps/web static/SSR deployment (Vercel/CF Pages) or containerized
 
-Production Deployment
-Recommended baseline
+Redis on VPS (or Upstash)
 
-1 VPS (2vCPU/4GB RAM) for SMB workloads
+MongoDB Atlas managed
 
-Docker Compose
+Must-have production controls
 
-Caddy TLS
+Spend caps and approval thresholds
 
-Nightly backups to S3/R2
+Idempotent webhooks
 
-Deploy steps (high level)
+Audit log for every automated change
 
-Provision VPS and install Docker
-
-Set production env files (.env.prod)
-
-Start stack:
-
-docker compose -f infra/docker/compose.yaml up -d --build
-
-Run migrations:
-
-docker exec -it adpulse-api pnpm db:migrate
-
-Configure DNS:
-
-app.yourdomain.com → web
-
-api.yourdomain.com → api
-
-Lock down:
-
-allowlist webhook endpoints
-
-set rate limits
-
-rotate secrets
-
-Environment Variables
-API (apps/api/.env)
-
-PORT=4000
-
-DATABASE_URL=postgresql://...
-
-REDIS_URL=redis://...
-
-JWT_PUBLIC_KEY=... or OIDC_ISSUER=...
-
-WEBHOOK_SECRET_META=...
-
-WEBHOOK_SECRET_PAYSTACK=...
-
-MPESA_CONSUMER_KEY=...
-
-MPESA_CONSUMER_SECRET=...
-
-MPESA_SHORTCODE=...
-
-MPESA_PASSKEY=...
-
-WHATSAPP_PROVIDER=twilio|infobip|meta
-
-WHATSAPP_API_KEY=...
-
-LLM_PROVIDER=openai|...
-
-LLM_MODEL=...
-
-LLM_MAX_COST_PER_LEAD=...
-
-Worker (apps/worker/.env)
-
-DATABASE_URL=...
-
-REDIS_URL=...
-
-QUEUE_CONCURRENCY=...
-
-SCHEDULE_PACING_MINUTES=30
-
-SCHEDULE_REBALANCE_HOURS=6
-
-SCHEDULE_FATIGUE_DAILY_AT=02:30
-
-Web (apps/web/.env.local)
-
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
-
-NEXT_PUBLIC_APP_URL=https://app.yourdomain.com
-
-Mobile (apps/mobile/.env)
-
-EXPO_PUBLIC_API_URL=https://api.yourdomain.com
-
-Webhook Integrations
-M-Pesa (Daraja)
-
-POST /webhooks/mpesa/callback
-
-Required:
-
-validate callback signature (provider-specific)
-
-idempotency using provider_event_id
-
-write to payments then trigger booking confirmation flow
-
-Paystack / Stripe
-
-POST /webhooks/paystack
-
-POST /webhooks/stripe
-
-Always:
-
-verify signature
-
-idempotency
-
-log raw payload reference for audits
-
-WhatsApp
-
-POST /webhooks/whatsapp/inbound
-
-Flow engine:
-
-reads conversation state
-
-emits next action (message, calendar query, deposit request)
-
-logs every step in wa_flow_runs
-
-Database and Migrations
-
-Migrations live in:
-
-database/migrations/*.sql
-
-Key objects:
-
-truth layer: events
-
-ads: campaigns, experiments, ad_variations, ad_metrics_hourly
-
-CRM: leads, lead_activity
-
-bookings: resources, availability_blocks, bookings
-
-payments: payments, deposit_policies
-
-governance: decision_logs, audit_logs
-
-dashboards: materialized views for <2s reads
+Rollback to last stable configuration
 
 Security Model
 
-RBAC: owner, marketer, agent, finance, viewer
+RBAC roles: owner, marketer, agent, finance, viewer
 
-All write endpoints require auth + org scoping
+All money-path actions require:
 
-Secrets never stored in DB unencrypted
-
-Webhook endpoints:
+idempotency key
 
 signature verification
 
-strict idempotency
+audit log entry
 
-rate limiting
+Secrets stored in env + encrypted store if needed
 
-Audit trail:
+PII encryption at rest for sensitive fields (AES-256-GCM)
 
-every automated budget/bid/pause action logged
+Key Workflows (End-to-End)
 
-rollback supported
+Ad → Lead → WhatsApp → Booking → Deposit → Confirmation
 
-Observability
+A/B/C Test → Keep/Kill/Scale → Rotate on fatigue
 
-Minimum:
-
-structured logs (JSON)
-
-request IDs
-
-job IDs for worker tasks
-
-Optional:
-
-Prometheus + Grafana (infra/observability)
-
-Sentry for error reporting
-
-Testing
-
-Unit tests:
-
-packages/decision-engine (must be deterministic)
-
-connectors with mocked providers
-
-Integration tests:
-
-webhook idempotency
-
-booking + deposit confirmation pipeline
-
-E2E:
-
-orchestrator launch → experiment created → worker deploys → metrics ingested
-
-Commands:
-
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm test:e2e
-Roadmap
-Phase 0 (7–10 days)
-
-Events truth layer + CRM + inquiry capture + basic dashboard
-
-Phase 1 (2–4 weeks)
-
-Booking funnel + deposit verification + reminders + review automation
-
-Phase 2 (4–6 weeks)
-
-Orchestrator v1: A/B/C deploy + guardrails + auto pacing/rebalance
-
-Phase 3
-
-Predictive scaling (24–72h) + fatigue engine + cross-platform budget optimizer
+Review request → resolve negatives → winback/loyalty automation
 
 License
 
-Choose based on your commercial plan:
+See LICENSE.
 
-OSS-first commercial friendly: Apache-2.0
 
-If you want to restrict SaaS reselling: consider AGPL (get legal advice)
+---
 
-Contact / Maintainers
+# MongoDB Atlas Schema (Production-Grade)
 
-Maintainer: <Your Name / Team>
+Below is a **practical Atlas schema** with:
+- **collections**
+- **document shapes**
+- **indexes (incl TTL)**
+- **collection validators**
+- **time-series metrics**
+- **idempotency + audit**
 
-Ops: see docs/runbooks/
+> Use **Atlas** for production; optionally mirror a local Mongo in docker for dev.
+
+---
+
+## 1) Naming & Conventions
+- Database: `aais`
+- Collections: `snake_case`
+- IDs: use Mongo `_id` as `ObjectId`, plus `org_id` for multi-tenancy
+- All writes include: `created_at`, `updated_at`
+- Use “soft delete” where needed: `deleted_at`
+
+---
+
+## 2) Collections (Core)
+
+## 2.1 `orgs`
+**Purpose:** Multi-tenant boundary.
+
+**Document**
+```json
+{
+  "_id": { "$oid": "..." },
+  "name": "Shanzu Beachfront Apartments",
+  "country": "KE",
+  "currency": "KES",
+  "timezone": "Africa/Nairobi",
+  "settings": {
+    "default_language": "en",
+    "max_daily_spend_cap": 50000,
+    "require_approval_over_pct": 30
+  },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ country: 1 }
+
+{ name: 1 }
+
+2.2 users
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "email": "admin@company.com",
+  "phone_e164": "+2547xxxxxxx",
+  "name": "Keith",
+  "roles": ["owner"],
+  "status": "active",
+  "last_login_at": { "$date": "..." },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+Unique: { org_id: 1, email: 1 }
+
+{ org_id: 1, status: 1 }
+
+2.3 offers
+
+Purpose: the “source of truth” for margin + constraints.
+
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "type": "service", 
+  "name": "Teeth Whitening",
+  "price": { "amount": 8500, "currency": "KES" },
+  "costs": {
+    "cogs": 1200,
+    "ops": 800,
+    "delivery": 0,
+    "payment_fee_pct": 1.5,
+    "refund_rate_pct": 2.0
+  },
+  "capacity": {
+    "mode": "appointments",
+    "units_per_day": 12,
+    "resource_ids": ["chair_1", "chair_2"]
+  },
+  "profit_intel": {
+    "contribution_margin": 5600,
+    "max_cpa": 3360,
+    "safety_factor": 0.6
+  },
+  "targeting": {
+    "countries": ["KE"],
+    "cities": ["Nairobi"],
+    "languages": ["en", "sw"]
+  },
+  "assets": { "primary_asset_id": { "$oid": "..." } },
+  "status": "active",
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, status: 1 }
+
+{ org_id: 1, type: 1 }
+
+Validator (MongoDB JSON Schema)
+
+db.createCollection("offers", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["org_id","type","name","price","costs","status","created_at","updated_at"],
+      properties: {
+        org_id: { bsonType: "objectId" },
+        type: { enum: ["product","service","event","property","clinic_appointment","coaching"] },
+        name: { bsonType: "string", minLength: 2 },
+        price: {
+          bsonType: "object",
+          required: ["amount","currency"],
+          properties: {
+            amount: { bsonType: ["int","long","double"], minimum: 0 },
+            currency: { bsonType: "string", minLength: 3, maxLength: 3 }
+          }
+        },
+        status: { enum: ["active","paused","archived"] }
+      }
+    }
+  }
+})
+2.4 assets
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "kind": "image",
+  "storage": {
+    "provider": "r2",
+    "bucket": "aais-assets",
+    "key": "orgs/<orgId>/assets/<file>.jpg",
+    "content_type": "image/jpeg",
+    "size_bytes": 1827723,
+    "sha256": "..."
+  },
+  "tags": ["creative","before_after"],
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, kind: 1 }
+
+{ "storage.sha256": 1 } (dedupe)
+
+2.5 campaigns
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "offer_id": { "$oid": "..." },
+  "platforms": ["meta","google","tiktok"],
+  "objective": "leads",
+  "status": "active",
+  "budgets": {
+    "daily_cap": 5000,
+    "monthly_cap": 100000,
+    "approval_required_over_pct": 30
+  },
+  "guardrails": {
+    "auto_pause_cpa_multiplier": 1.3,
+    "min_conversions_before_action": 3,
+    "cooldown_minutes": 180
+  },
+  "platform_refs": {
+    "meta": { "ad_account_id": "act_...", "campaign_id": "..." },
+    "google": { "customer_id": "...", "campaign_id": "..." }
+  },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, status: 1 }
+
+{ org_id: 1, offer_id: 1 }
+
+2.6 variations (A/B/C)
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "campaign_id": { "$oid": "..." },
+  "key": "A",
+  "angle": "direct_offer",
+  "hook": "Get whiter teeth in 45 minutes",
+  "creative_asset_id": { "$oid": "..." },
+  "status": "testing",
+  "deployed": {
+    "meta": { "ad_id": "...", "adset_id": "..." },
+    "google": { "asset_group_id": "..." }
+  },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+Unique: { org_id: 1, campaign_id: 1, key: 1 }
+
+{ org_id: 1, status: 1 }
+
+2.7 events (Server Truth)
+
+Purpose: unified event stream (page, lead, booking, payment).
+
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "type": "lead_created",
+  "ts": { "$date": "..." },
+  "actor": { "kind": "lead", "id": { "$oid": "..." } },
+  "attribution": {
+    "utm": {
+      "source": "facebook",
+      "medium": "cpc",
+      "campaign": "whitening_feb",
+      "content": "varA"
+    },
+    "click_ids": { "fbclid": "...", "gclid": null, "ttclid": null }
+  },
+  "payload": { "lead_id": { "$oid": "..." }, "phone_e164": "+254..." },
+  "ingest": { "ip": "1.2.3.4", "user_agent": "...", "sig_ok": true },
+  "created_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, ts: -1 }
+
+{ org_id: 1, type: 1, ts: -1 }
+
+{ "attribution.click_ids.gclid": 1 }
+
+{ "attribution.click_ids.fbclid": 1 }
+
+For very high volumes, shard by org_id.
+
+2.8 leads
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "source": { "channel": "meta", "campaign_id": { "$oid": "..." }, "variation": "A" },
+  "contact": { "name": "Amina", "phone_e164": "+2547...", "email": null },
+  "stage": "new",
+  "score": 62,
+  "assigned_to": { "$oid": "..." },
+  "notes": [],
+  "last_touch": { "ts": { "$date": "..." }, "type": "whatsapp_message" },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, stage: 1, updated_at: -1 }
+
+Unique optional: { org_id: 1, "contact.phone_e164": 1 } (if your org wants 1 lead per phone)
+
+2.9 conversations (WhatsApp state machine)
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "lead_id": { "$oid": "..." },
+  "provider": "meta_cloud",
+  "thread": { "wa_id": "2547...", "phone_e164": "+2547..." },
+  "state": { "flow": "booking", "step": "awaiting_date", "context": {} },
+  "last_message_at": { "$date": "..." },
+  "flags": { "handoff_required": false },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, lead_id: 1 }
+
+{ org_id: 1, "thread.wa_id": 1 }
+
+2.10 resources (availability objects)
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "type": "room|chair|seat|staff",
+  "name": "Room 203",
+  "calendar": { "provider": "google", "calendar_id": "..." },
+  "active": true,
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, active: 1 }
+
+2.11 bookings (with TTL for tentative)
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "lead_id": { "$oid": "..." },
+  "offer_id": { "$oid": "..." },
+  "resource_id": { "$oid": "..." },
+  "status": "tentative",
+  "slot": { "start": { "$date": "..." }, "end": { "$date": "..." } },
+  "deposit": { "required": true, "amount": 2500, "currency": "KES", "paid": false },
+  "expires_at": { "$date": "..." },      // TTL target
+  "confirmation": { "sent": false, "sent_at": null },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, status: 1, "slot.start": 1 }
+
+{ org_id: 1, resource_id: 1, "slot.start": 1 }
+
+TTL index: { expires_at: 1 } with expireAfterSeconds: 0
+
+2.12 payments
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "provider": "mpesa_daraja",
+  "direction": "inbound",
+  "purpose": "deposit",
+  "amount": { "value": 2500, "currency": "KES" },
+  "status": "confirmed",
+  "refs": {
+    "provider_ref": "ws_CO_123...",
+    "checkout_request_id": "...",
+    "merchant_request_id": "..."
+  },
+  "matched": { "booking_id": { "$oid": "..." }, "lead_id": { "$oid": "..." } },
+  "raw": { "daraja": { } },
+  "received_at": { "$date": "..." },
+  "created_at": { "$date": "..." }
+}
+
+Indexes
+
+Unique: { org_id: 1, "refs.provider_ref": 1 }
+
+{ org_id: 1, status: 1, received_at: -1 }
+
+2.13 reviews
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "lead_id": { "$oid": "..." },
+  "booking_id": { "$oid": "..." },
+  "platform": "google",
+  "request": { "sent_at": { "$date": "..." }, "link": "https://..." },
+  "result": { "rating": 5, "comment": "..." },
+  "routing": { "negative_flow_triggered": false },
+  "created_at": { "$date": "..." },
+  "updated_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, platform: 1, "result.rating": 1 }
+
+{ org_id: 1, "request.sent_at": -1 }
+
+2.14 audit_logs (non-negotiable)
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "actor": { "type": "user|system", "id": { "$oid": "..." } },
+  "action": "campaign_budget_updated",
+  "target": { "collection": "campaigns", "id": { "$oid": "..." } },
+  "reason": { "rule": "rebalance_6h", "evidence": { "cpa": 980, "max_cpa": 1200 } },
+  "before": { "daily_cap": 5000 },
+  "after": { "daily_cap": 6500 },
+  "created_at": { "$date": "..." }
+}
+
+Indexes
+
+{ org_id: 1, created_at: -1 }
+
+{ org_id: 1, action: 1, created_at: -1 }
+
+2.15 idempotency_keys (webhooks + money paths)
+{
+  "_id": { "$oid": "..." },
+  "org_id": { "$oid": "..." },
+  "key": "mpesa:ws_CO_123...",
+  "scope": "payments_webhook",
+  "first_seen_at": { "$date": "..." },
+  "expires_at": { "$date": "..." }
+}
+
+Indexes
+
+Unique: { org_id: 1, key: 1 }
+
+TTL: { expires_at: 1 } expireAfterSeconds: 0
+
+3) Time-Series Metrics (Atlas)
+3.1 ad_metrics_hourly (Time Series Collection)
+
+Use MongoDB time-series for hourly metrics (cheap + fast for dashboards).
+
+Create
+
+db.createCollection("ad_metrics_hourly", {
+  timeseries: {
+    timeField: "ts",
+    metaField: "meta",
+    granularity: "hours"
+  }
+})
+
+Doc
+
+{
+  "ts": { "$date": "2026-02-28T10:00:00Z" },
+  "meta": {
+    "org_id": { "$oid": "..." },
+    "platform": "meta",
+    "campaign_id": { "$oid": "..." },
+    "variation_id": { "$oid": "..." }
+  },
+  "spend": 320,
+  "impressions": 8400,
+  "clicks": 210,
+  "conversions": 4,
+  "revenue": 0,
+  "cpc": 1.52,
+  "cpm": 38.1,
+  "ctr": 0.025,
+  "cpa": 80
+}
+
+Indexes
+
+Mongo auto-indexes time-series internals; also add:
+
+db.ad_metrics_hourly.createIndex({ "meta.org_id": 1, "meta.campaign_id": 1, ts: -1 })
+4) Index Pack (Recommended)
+
+Run once (your apps/api/scripts/create-indexes.ts should do this):
+
+TTL
+
+bookings.expires_at TTL
+
+idempotency_keys.expires_at TTL
+
+otp_codes.expires_at TTL (if you add OTP)
+
+Multi-tenant filters
+
+Most queries should start with org_id:
+
+org_id + stage + updated_at
+
+org_id + status + created_at
+
+org_id + ts
+
+5) Optional: Atlas Search (Leads + Conversations)
+
+Create an Atlas Search index on:
+
+leads.contact.name, leads.contact.phone_e164, leads.notes
+
+conversations.thread.phone_e164, recent message text (if stored)
