@@ -1,0 +1,395 @@
+AAIS / AdPulse Africa — Complete Monorepo Project Structure
+(Frontend + Backend + Mobile + Shared Packages + Infra + Docs)
+
+adpulse-aaas/
+├─ README.md
+├─ LICENSE
+├─ package.json                      # pnpm workspace root
+├─ pnpm-workspace.yaml
+├─ turbo.json                        # Turborepo pipeline
+├─ tsconfig.base.json
+├─ .editorconfig
+├─ .gitignore
+├─ .env.example                      # root env template
+├─ .github/
+│  ├─ workflows/
+│  │  ├─ ci.yml                      # lint/test/build
+│  │  ├─ deploy-web.yml              # deploy Next.js
+│  │  ├─ deploy-api.yml              # deploy API+workers
+│  │  └─ deploy-mobile.yml           # EAS build/publish
+│  └─ CODEOWNERS
+│
+├─ apps/
+│  ├─ web/                           # Next.js 14 (Command Center + all tabs)
+│  │  ├─ app/
+│  │  │  ├─ (marketing)/
+│  │  │  │  ├─ page.tsx              # landing page (product marketing)
+│  │  │  │  └─ pricing/page.tsx
+│  │  │  ├─ (auth)/
+│  │  │  │  ├─ login/page.tsx
+│  │  │  │  ├─ register/page.tsx
+│  │  │  │  └─ reset/page.tsx
+│  │  │  ├─ (dashboard)/
+│  │  │  │  ├─ layout.tsx            # sidebar + topbar (your AdPulse UI shell)
+│  │  │  │  ├─ page.tsx              # Command Center (overview)
+│  │  │  │  ├─ orchestrator/page.tsx # AI Orchestrator tab
+│  │  │  │  ├─ whatsapp/page.tsx     # WhatsApp & Booking
+│  │  │  │  ├─ crm/page.tsx          # CRM & Leads
+│  │  │  │  ├─ payments/page.tsx     # M-Pesa & Payments
+│  │  │  │  ├─ analytics/page.tsx    # Analytics
+│  │  │  │  └─ reviews/page.tsx      # Reviews & SEO (GBP)
+│  │  │  ├─ api/health/route.ts      # web health endpoint (optional)
+│  │  │  ├─ layout.tsx
+│  │  │  ├─ globals.css
+│  │  │  └─ middleware.ts            # auth gate + org routing
+│  │  ├─ components/
+│  │  │  ├─ shell/                   # layout primitives
+│  │  │  │  ├─ Sidebar.tsx
+│  │  │  │  ├─ Topbar.tsx
+│  │  │  │  └─ PageHeader.tsx
+│  │  │  ├─ cards/
+│  │  │  │  ├─ KpiCard.tsx
+│  │  │  │  ├─ Panel.tsx
+│  │  │  │  └─ StatusBadge.tsx
+│  │  │  ├─ charts/
+│  │  │  │  ├─ Sparkline.tsx
+│  │  │  │  ├─ BarMini.tsx
+│  │  │  │  └─ Funnel.tsx
+│  │  │  ├─ orchestrator/
+│  │  │  │  ├─ LaunchForm.tsx        # product input + budget + platforms
+│  │  │  │  ├─ PipelineStatus.tsx    # real-time run progress
+│  │  │  │  ├─ BudgetSplit.tsx
+│  │  │  │  └─ VariationsTable.tsx
+│  │  │  ├─ crm/
+│  │  │  │  ├─ LeadTable.tsx
+│  │  │  │  ├─ Kanban.tsx
+│  │  │  │  └─ LeadDrawer.tsx
+│  │  │  ├─ booking/
+│  │  │  │  ├─ AvailabilityCalendar.tsx
+│  │  │  │  ├─ BookingFunnel.tsx
+│  │  │  │  └─ DepositPanel.tsx
+│  │  │  └─ reviews/
+│  │  │     ├─ ReviewQueue.tsx
+│  │  │     └─ GbpTasks.tsx
+│  │  ├─ lib/
+│  │  │  ├─ apiClient.ts             # typed fetch wrapper
+│  │  │  ├─ auth.ts                  # session helpers
+│  │  │  ├─ format.ts
+│  │  │  └─ constants.ts
+│  │  ├─ public/
+│  │  ├─ tests/
+│  │  ├─ next.config.js
+│  │  └─ env.example
+│  │
+│  ├─ api/                           # Fastify (core AAIS API gateway)
+│  │  ├─ src/
+│  │  │  ├─ main.ts                  # bootstrap
+│  │  │  ├─ server.ts                # fastify instance + plugins
+│  │  │  ├─ config/
+│  │  │  │  ├─ env.ts                # zod env validation
+│  │  │  │  ├─ logger.ts
+│  │  │  │  └─ rateLimit.ts
+│  │  │  ├─ plugins/
+│  │  │  │  ├─ auth.plugin.ts        # JWT/OIDC verify + RBAC
+│  │  │  │  ├─ db.plugin.ts          # Postgres client
+│  │  │  │  ├─ redis.plugin.ts
+│  │  │  │  ├─ queue.plugin.ts       # BullMQ client
+│  │  │  │  └─ telemetry.plugin.ts
+│  │  │  ├─ modules/
+│  │  │  │  ├─ health/
+│  │  │  │  │  ├─ health.routes.ts
+│  │  │  │  │  └─ health.service.ts
+│  │  │  │  ├─ orgs/
+│  │  │  │  │  ├─ orgs.routes.ts
+│  │  │  │  │  ├─ orgs.service.ts
+│  │  │  │  │  └─ orgs.repo.ts
+│  │  │  │  ├─ offers/
+│  │  │  │  │  ├─ offers.routes.ts
+│  │  │  │  ├─ tracking/
+│  │  │  │  │  ├─ events.routes.ts           # POST /events (server-side truth)
+│  │  │  │  │  ├─ attribution.service.ts     # UTMs + click ids mapping
+│  │  │  │  │  └─ events.repo.ts
+│  │  │  │  ├─ orchestrator/
+│  │  │  │  │  ├─ orchestrator.routes.ts     # launch, status, runs
+│  │  │  │  │  ├─ orchestrator.service.ts    # build experiment + schedule jobs
+│  │  │  │  │  ├─ profit.service.ts          # margin, MaxCPA, cost ceilings
+│  │  │  │  │  ├─ creative.service.ts        # template-based creative gen
+│  │  │  │  │  ├─ deploy.service.ts          # connectors: Meta/Google/TikTok
+│  │  │  │  │  └─ orchestrator.repo.ts
+│  │  │  │  ├─ ads/
+│  │  │  │  │  ├─ ads.routes.ts              # accounts, campaigns, metrics
+│  │  │  │  │  ├─ metrics.service.ts         # hourly metric ingestion
+│  │  │  │  │  └─ ads.repo.ts
+│  │  │  │  ├─ crm/
+│  │  │  │  │  ├─ leads.routes.ts
+│  │  │  │  │  ├─ leads.service.ts
+│  │  │  │  │  ├─ scoring.service.ts         # rules-first scoring
+│  │  │  │  │  └─ leads.repo.ts
+│  │  │  │  ├─ whatsapp/
+│  │  │  │  │  ├─ whatsapp.webhooks.ts       # inbound messages
+│  │  │  │  │  ├─ whatsapp.service.ts        # send + templates
+│  │  │  │  │  ├─ flows/
+│  │  │  │  │  │  ├─ flow.engine.ts          # state machine
+│  │  │  │  │  │  ├─ booking.flow.ts
+│  │  │  │  │  │  ├─ deposit.flow.ts
+│  │  │  │  │  │  ├─ review.flow.ts
+│  │  │  │  │  │  └─ broadcast.flow.ts
+│  │  │  │  │  └─ whatsapp.repo.ts
+│  │  │  │  ├─ booking/
+│  │  │  │  │  ├─ booking.routes.ts
+│  │  │  │  │  ├─ booking.service.ts
+│  │  │  │  │  ├─ availability.service.ts
+│  │  │  │  │  └─ booking.repo.ts
+│  │  │  │  ├─ payments/
+│  │  │  │  │  ├─ payments.routes.ts
+│  │  │  │  │  ├─ mpesa.webhooks.ts          # Daraja callbacks/IPN
+│  │  │  │  │  ├─ paystack.webhooks.ts
+│  │  │  │  │  ├─ payments.service.ts
+│  │  │  │  │  └─ payments.repo.ts
+│  │  │  │  ├─ reviews/
+│  │  │  │  │  ├─ reviews.routes.ts
+│  │  │  │  │  ├─ reviews.service.ts
+│  │  │  │  │  └─ gbp.service.ts             # Google Business Profile tasks
+│  │  │  │  └─ analytics/
+│  │  │  │     ├─ analytics.routes.ts         # overview/funnel/attribution
+│  │  │  │     ├─ analytics.service.ts
+│  │  │  │     └─ analytics.repo.ts
+│  │  │  ├─ webhooks/
+│  │  │  │  ├─ meta-capi.ts                   # conversion forwarding
+│  │  │  │  └─ google-enhanced.ts
+│  │  │  └─ utils/
+│  │  │     ├─ idempotency.ts
+│  │  │     ├─ crypto.ts
+│  │  │     ├─ time.ts
+│  │  │     └─ errors.ts
+│  │  ├─ tests/
+│  │  ├─ Dockerfile
+│  │  └─ env.example
+│  │
+│  ├─ worker/                        # BullMQ workers (Decision Engine execution)
+│  │  ├─ src/
+│  │  │  ├─ main.ts                  # worker bootstrap
+│  │  │  ├─ queues/
+│  │  │  │  ├─ index.ts              # queue registry
+│  │  │  │  ├─ orchestrator.queue.ts
+│  │  │  │  ├─ optimizer.queue.ts
+│  │  │  │  ├─ reminders.queue.ts
+│  │  │  │  ├─ broadcasts.queue.ts
+│  │  │  │  └─ reviews.queue.ts
+│  │  │  ├─ processors/
+│  │  │  │  ├─ orchestrator/
+│  │  │  │  │  ├─ build-experiment.ts
+│  │  │  │  │  ├─ generate-creatives.ts
+│  │  │  │  │  ├─ deploy-campaigns.ts
+│  │  │  │  │  └─ init-monitoring.ts
+│  │  │  │  ├─ optimizer/
+│  │  │  │  │  ├─ pacing-check.ts            # every 30–60 min
+│  │  │  │  │  ├─ rebalance-budget.ts        # every 6–12h
+│  │  │  │  │  ├─ anomaly-detect.ts
+│  │  │  │  │  ├─ fatigue-scan.ts            # daily
+│  │  │  │  │  └─ attribution-reconcile.ts
+│  │  │  │  ├─ crm/
+│  │  │  │  │  ├─ lead-followups.ts
+│  │  │  │  │  └─ lead-assignment.ts
+│  │  │  │  ├─ booking/
+│  │  │  │  │  ├─ reminders.ts
+│  │  │  │  │  └─ no-show-flow.ts
+│  │  │  │  └─ reviews/
+│  │  │  │     ├─ request-review.ts
+│  │  │  │     └─ gbp-posts.ts
+│  │  │  ├─ schedulers/
+│  │  │  │  ├─ cron.ts                      # registers repeatable jobs
+│  │  │  │  └─ schedules.ts                 # intervals + guardrails
+│  │  │  └─ config/
+│  │  │     ├─ env.ts
+│  │  │     └─ logger.ts
+│  │  ├─ Dockerfile
+│  │  └─ env.example
+│  │
+│  ├─ mobile/                         # Expo (React Native) for owners/sales teams
+│  │  ├─ app/
+│  │  │  ├─ (auth)/
+│  │  │  │  ├─ login.tsx
+│  │  │  │  └─ register.tsx
+│  │  │  ├─ (tabs)/
+│  │  │  │  ├─ index.tsx               # Command Center (mobile)
+│  │  │  │  ├─ orchestrator.tsx        # launch campaign
+│  │  │  │  ├─ leads.tsx               # CRM quick actions
+│  │  │  │  ├─ booking.tsx             # calendar + confirmations
+│  │  │  │  ├─ payments.tsx            # deposits status
+│  │  │  │  └─ alerts.tsx              # anomalies + approvals
+│  │  │  ├─ lead/[id].tsx
+│  │  │  ├─ booking/[id].tsx
+│  │  │  └─ _layout.tsx                # expo-router layout
+│  │  ├─ components/
+│  │  │  ├─ KpiStrip.tsx
+│  │  │  ├─ StatusBadge.tsx
+│  │  │  ├─ LeadCard.tsx
+│  │  │  └─ ApproveBudgetModal.tsx
+│  │  ├─ lib/
+│  │  │  ├─ apiClient.ts               # same contract as web
+│  │  │  ├─ auth.ts
+│  │  │  └─ push.ts                    # Expo push notifications
+│  │  ├─ assets/
+│  │  ├─ app.json
+│  │  ├─ eas.json
+│  │  └─ env.example
+│  │
+│  └─ docs-site/                       # optional: internal docs portal
+│     ├─ app/
+│     └─ ...
+│
+├─ packages/
+│  ├─ shared/                          # single source of truth (types + schemas)
+│  │  ├─ src/
+│  │  │  ├─ schemas/
+│  │  │  │  ├─ offers.schema.ts
+│  │  │  │  ├─ events.schema.ts
+│  │  │  │  ├─ orchestrator.schema.ts
+│  │  │  │  ├─ crm.schema.ts
+│  │  │  │  ├─ booking.schema.ts
+│  │  │  │  ├─ payments.schema.ts
+│  │  │  │  └─ reviews.schema.ts
+│  │  │  ├─ enums/
+│  │  │  │  ├─ platforms.ts            # META/GOOGLE/TIKTOK/...
+│  │  │  │  ├─ leadStages.ts
+│  │  │  │  ├─ eventTypes.ts
+│  │  │  │  └─ roles.ts
+│  │  │  ├─ constants/
+│  │  │  │  ├─ guardrails.ts           # MaxCPA multipliers, caps defaults
+│  │  │  │  └─ kpis.ts
+│  │  │  ├─ types/
+│  │  │  │  └─ api.ts                  # Request/Response types
+│  │  │  └─ index.ts
+│  │  ├─ package.json
+│  │  └─ tsconfig.json
+│  │
+│  ├─ connectors/                      # external system adapters (thin)
+│  │  ├─ src/
+│  │  │  ├─ ads/
+│  │  │  │  ├─ meta/
+│  │  │  │  │  ├─ meta.client.ts
+│  │  │  │  │  ├─ meta.deploy.ts       # create campaigns/adsets/ads
+│  │  │  │  │  ├─ meta.metrics.ts      # fetch insights
+│  │  │  │  │  └─ meta.capi.ts         # server-side conversions
+│  │  │  │  ├─ google/
+│  │  │  │  │  ├─ google.client.ts
+│  │  │  │  │  ├─ google.deploy.ts
+│  │  │  │  │  └─ google.metrics.ts
+│  │  │  │  └─ tiktok/
+│  │  │  │     ├─ tiktok.client.ts
+│  │  │  │     ├─ tiktok.deploy.ts
+│  │  │  │     └─ tiktok.metrics.ts
+│  │  │  ├─ whatsapp/
+│  │  │  │  ├─ wa.client.ts            # send template/message
+│  │  │  │  ├─ wa.webhooks.ts
+│  │  │  │  └─ wa.verify.ts
+│  │  │  ├─ payments/
+│  │  │  │  ├─ mpesa/
+│  │  │  │  │  ├─ daraja.client.ts
+│  │  │  │  │  ├─ daraja.stk.ts
+│  │  │  │  │  └─ daraja.verify.ts
+│  │  │  │  ├─ paystack/
+│  │  │  │  │  ├─ paystack.client.ts
+│  │  │  │  │  └─ paystack.verify.ts
+│  │  │  │  └─ stripe/
+│  │  │  │     ├─ stripe.client.ts
+│  │  │  │     └─ stripe.verify.ts
+│  │  │  └─ seo/
+│  │  │     └─ gbp.client.ts           # Google Business Profile automation
+│  │  ├─ package.json
+│  │  └─ tsconfig.json
+│  │
+│  ├─ decision-engine/                 # rules + stats tests (pure)
+│  │  ├─ src/
+│  │  │  ├─ pacing/
+│  │  │  │  ├─ pacing.ts
+│  │  │  │  └─ caps.ts
+│  │  │  ├─ experiments/
+│  │  │  │  ├─ abc-allocator.ts
+│  │  │  │  ├─ bayes-conversion.ts     # low-volume friendly
+│  │  │  │  └─ sequential.ts
+│  │  │  ├─ anomalies/
+│  │  │  │  ├─ ctr-collapse.ts
+│  │  │  │  ├─ spend-spike.ts
+│  │  │  │  └─ conv-drop.ts
+│  │  │  ├─ scaling/
+│  │  │  │  ├─ scale-up.ts
+│  │  │  │  ├─ pause.ts
+│  │  │  │  └─ rotate-creatives.ts
+│  │  │  ├─ attribution/
+│  │  │  │  └─ reconcile.ts
+│  │  │  └─ index.ts
+│  │  ├─ package.json
+│  │  └─ tsconfig.json
+│  │
+│  ├─ ui/                               # shared UI atoms (web+mobile where possible)
+│  │  ├─ src/
+│  │  │  ├─ badges/
+│  │  │  ├─ cards/
+│  │  │  └─ charts/
+│  │  └─ package.json
+│  │
+│  └─ config/                           # eslint/prettier/ts configs
+│     ├─ eslint/
+│     ├─ prettier/
+│     └─ tsconfig/
+│
+├─ infra/
+│  ├─ docker/
+│  │  ├─ compose.yaml                   # api, worker, web, postgres, redis, n8n
+│  │  ├─ Caddyfile
+│  │  ├─ postgres/
+│  │  │  └─ init.sql
+│  │  ├─ redis/
+│  │  └─ scripts/
+│  │     ├─ backup.sh                   # nightly backup to S3/R2
+│  │     └─ restore.sh
+│  ├─ supabase/                         # if self-hosting Supabase
+│  │  ├─ config.toml
+│  │  ├─ migrations/
+│  │  └─ seed.sql
+│  └─ observability/
+│     ├─ prometheus.yml
+│     └─ grafana/
+│
+├─ database/
+│  ├─ migrations/                       # SQL migrations (if not using Supabase CLI)
+│  │  ├─ 0001_init.sql
+│  │  ├─ 0002_events.sql
+│  │  ├─ 0003_ads.sql
+│  │  ├─ 0004_crm.sql
+│  │  ├─ 0005_booking.sql
+│  │  ├─ 0006_payments.sql
+│  │  ├─ 0007_reviews_seo.sql
+│  │  ├─ 0008_decision_logs.sql
+│  │  └─ 0009_materialized_views.sql
+│  ├─ seeds/
+│  │  ├─ dev_seed.sql
+│  │  └─ demo_org.sql
+│  └─ README.md
+│
+├─ docs/
+│  ├─ architecture.md
+│  ├─ domain-model.md
+│  ├─ event-taxonomy.md
+│  ├─ decision-rules.md
+│  ├─ api-contracts.md
+│  ├─ security.md
+│  ├─ deployment.md
+│  ├─ runbooks/
+│  │  ├─ mpesa.md
+│  │  ├─ whatsapp.md
+│  │  ├─ meta-ads.md
+│  │  ├─ google-ads.md
+│  │  └─ tiktok-ads.md
+│  └─ adr/
+│     ├─ 0001-monorepo.md
+│     ├─ 0002-event-truth.md
+│     └─ 0003-decision-engine.md
+│
+└─ scripts/
+   ├─ dev.sh                            # one-command local boot
+   ├─ lint.sh
+   ├─ typecheck.sh
+   └─ seed.sh
